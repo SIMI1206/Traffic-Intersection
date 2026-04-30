@@ -1,27 +1,59 @@
 / {
     aliases {
-        /* Semafoare Auto Nord-Sud */
+        /* Semafoare Auto */
         led-ns-red = &led_ns_red;
         led-ns-yel = &led_ns_yel;
         led-ns-grn = &led_ns_grn;
-
-        /* Semafoare Auto Est-Vest */
         led-ew-red = &led_ew_red;
         led-ew-yel = &led_ew_yel;
         led-ew-grn = &led_ew_grn;
+
+        /* Semafoare Pietoni */
+        led-ped-ns-red = &led_ped_ns_red;
+        led-ped-ns-grn = &led_ped_ns_grn;
+        led-ped-ew-red = &led_ped_ew_red;
+        led-ped-ew-grn = &led_ped_ew_grn;
+
+        /* Butoane Pietoni */
+        sw-ped-ns = &button_ped_ns;
+        sw-ped-ew = &button_ped_ew;
+
+        ir-sensor = &ir_receiver;
     };
 
     leds {
         compatible = "gpio-leds";
         
-        /* Pini Nord-Sud (GP6, GP7, GP8) - ACTIVE_HIGH */
+        /* Auto (ACTIVE_HIGH direct pe module) */
         led_ns_red: led_ns_red { gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>; };
         led_ns_yel: led_ns_yel { gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>; };
         led_ns_grn: led_ns_grn { gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>; };
         
-        /* Pini Est-Vest (GP19, GP20, GP21) - ACTIVE_HIGH */
         led_ew_red: led_ew_red { gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>; };
         led_ew_yel: led_ew_yel { gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>; };
         led_ew_grn: led_ew_grn { gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>; };
+
+        /* Pietoni (ACTIVE_HIGH pentru ca trec prin tranzistorul NPN) */
+        led_ped_ns_red: led_ped_ns_red { gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>; };
+        led_ped_ns_grn: led_ped_ns_grn { gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>; };
+        
+        led_ped_ew_red: led_ped_ew_red { gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>; };
+        led_ped_ew_grn: led_ped_ew_grn { gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>; };
+    };
+
+    buttons {
+        compatible = "gpio-keys";
+        
+        /* Butoane pietoni: PULL_UP intern activat, contactul cu GND inseamna apasare (ACTIVE_LOW) */
+        button_ped_ns: button_ped_ns {
+            gpios = <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+        };
+        button_ped_ew: button_ped_ew {
+            gpios = <&gpio0 15 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+        };
+
+        ir_receiver: ir_receiver { 
+            gpios = <&gpio0 16 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>; 
+        };
     };
 };
