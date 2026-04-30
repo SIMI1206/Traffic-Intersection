@@ -45,15 +45,10 @@
         compatible = "gpio-keys";
         
         /* Butoane pietoni: PULL_UP intern activat, contactul cu GND inseamna apasare (ACTIVE_LOW) */
-        button_ped_ns: button_ped_ns {
-            gpios = <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-        };
-        button_ped_ew: button_ped_ew {
-            gpios = <&gpio0 15 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-        };
+        
+        button_ped_ns: button_ped_ns {  gpios = <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>; };
+        button_ped_ew: button_ped_ew {  gpios = <&gpio0 15 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;};
 
-        ir_receiver: ir_receiver { 
-            gpios = <&gpio0 16 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>; 
-        };
+        ir_receiver: ir_receiver { gpios = <&gpio0 16 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>; };
     };
 };

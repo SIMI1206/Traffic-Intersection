@@ -1,10 +1,11 @@
-#ifndef TRAFFIC_AUTO_H
-#define TRAFFIC_AUTO_H
+#ifndef CARS_LIGHTS_CONTROL_H
+#define CARS_LIGHTS_CONTROL_H
+
+#include <zephyr/kernel.h>
 
 void init_traffic_auto(void);
+void force_auto_red(void);
+void restart_car_traffic_thread(void);
+void stop_car_traffic_thread(void); /* Functia noua, sigura */
 
-extern const k_tid_t car_traffic_id; /* Expunem ID-ul thread-ului pentru a-l putea ingheta */
-void force_auto_red(void);           /* Functie de urgenta */
-
-
-#endif 
+#endif
