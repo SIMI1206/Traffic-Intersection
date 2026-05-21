@@ -4,7 +4,7 @@
 #include "cars_lights_control.h"
 #include "hazard.h"
 
-#define COOLDOWN_TIME 15000 /* 15 secunde Anti-Spam intre traversari */
+#define COOLDOWN_TIME 15000 // 15 sec cooldown between pedestrian crossings
 
 K_SEM_DEFINE(ped_ns_sem, 0, 1);
 K_SEM_DEFINE(ped_ew_sem, 0, 1);
@@ -21,39 +21,48 @@ static struct gpio_callback btn_ew_cb_data;
 
 bool ns_ped_request = false;
 bool ew_ped_request = false;
-int64_t last_ns_time = -15000; /* Permite apasarea instant la pornire */
+int64_t last_ns_time = -15000; 
 int64_t last_ew_time = -15000;
 
-/* --- LOGICA ANTI-SPAM IN BUTOANE --- */
 void button_ns_pressed(const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
-    if (!hazard_mode_active && (k_uptime_get() - last_ns_time >= COOLDOWN_TIME)) {
-        ns_ped_request = true;
-        k_sem_give(&ped_ns_sem);
+    if (!hazard_mode_active) {
+        ns_ped_request = true; 
+        if (is_ns_cooldown_passed()) {
+            k_sem_give(&ped_ns_sem); 
+        }
     }
 }
 
 void button_ew_pressed(const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
-    if (!hazard_mode_active && (k_uptime_get() - last_ew_time >= COOLDOWN_TIME)) {
+    if (!hazard_mode_active) {
         ew_ped_request = true;
-        k_sem_give(&ped_ew_sem);
+        if (is_ew_cooldown_passed()) {
+            k_sem_give(&ped_ew_sem);
+        }
     }
 }
 
+bool is_ns_cooldown_passed(void) {
+    return (k_uptime_get() - last_ns_time >= COOLDOWN_TIME);
+}
+
+bool is_ew_cooldown_passed(void) {
+    return (k_uptime_get() - last_ew_time >= COOLDOWN_TIME);
+}
 
 
-/* --- INITIALIZARI SI FUNCTII DE STARE --- */
 void init_traffic_pedestrians(void) {
     gpio_pin_configure_dt(&ped_ns_red, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&ped_ns_grn, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&ped_ew_red, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&ped_ew_grn, GPIO_OUTPUT_INACTIVE);
 
-    gpio_pin_configure_dt(&btn_ns, GPIO_INPUT);
+    gpio_pin_configure_dt(&btn_ns, GPIO_INPUT | GPIO_PULL_UP);
     gpio_pin_interrupt_configure_dt(&btn_ns, GPIO_INT_EDGE_TO_ACTIVE);
     gpio_init_callback(&btn_ns_cb_data, button_ns_pressed, BIT(btn_ns.pin));
     gpio_add_callback(btn_ns.port, &btn_ns_cb_data);
 
-    gpio_pin_configure_dt(&btn_ew, GPIO_INPUT);
+    gpio_pin_configure_dt(&btn_ew, GPIO_INPUT | GPIO_PULL_UP);
     gpio_pin_interrupt_configure_dt(&btn_ew, GPIO_INT_EDGE_TO_ACTIVE);
     gpio_init_callback(&btn_ew_cb_data, button_ew_pressed, BIT(btn_ew.pin));
     gpio_add_callback(btn_ew.port, &btn_ew_cb_data);
