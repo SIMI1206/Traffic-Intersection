@@ -129,3 +129,15 @@ void force_auto_red(void) {
     gpio_pin_set_dt(&ns_grn, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_red, 1);
     gpio_pin_set_dt(&ew_grn, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_red, 1);
 }
+
+void force_cars_ns_green_ew_red(void) {
+    /* Nord-Sud are Verde, Est-Vest are Rosu */
+    gpio_pin_set_dt(&ns_red, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_grn, 1);
+    gpio_pin_set_dt(&ew_grn, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_red, 1);
+}
+
+void force_cars_ew_green_ns_red(void) {
+    /* Est-Vest are Verde, Nord-Sud are Rosu */
+    gpio_pin_set_dt(&ew_red, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_grn, 1);
+    gpio_pin_set_dt(&ns_grn, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_red, 1);
+}

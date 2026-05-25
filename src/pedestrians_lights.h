@@ -22,4 +22,12 @@ void force_ped_red(void);
 bool is_ns_cooldown_passed(void);
 bool is_ew_cooldown_passed(void);
 
+void force_ped_off(void);
+bool get_ns_ped_request(void);
+bool get_ew_ped_request(void);
+void clear_ns_ped_request(void);
+void clear_ew_ped_request(void);
+void update_ns_cooldown(void);
+void update_ew_cooldown(void);
+
 #endif 
