@@ -30,4 +30,7 @@ void clear_ew_ped_request(void);
 void update_ns_cooldown(void);
 void update_ew_cooldown(void);
 
+char get_ped_ns_color(void);
+char get_ped_ew_color(void);
+
 #endif 

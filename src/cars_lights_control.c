@@ -25,12 +25,14 @@ static k_tid_t car_traffic_tid = NULL;
 
 
 void init_traffic_auto(void) {
-    gpio_pin_configure_dt(&ns_red, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ns_yel, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ns_grn, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ew_red, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ew_yel, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ew_grn, GPIO_OUTPUT_INACTIVE);
+    /* Adaugam | GPIO_INPUT ca sa putem "citi" ce culoare e aprinsa */
+    gpio_pin_configure_dt(&ns_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ns_yel, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ns_grn, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    
+    gpio_pin_configure_dt(&ew_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ew_yel, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ew_grn, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
     
     restart_car_traffic_thread();
 }
@@ -126,8 +128,14 @@ void stop_car_traffic_thread(void) {
 }
 
 void force_auto_red(void) {
-    gpio_pin_set_dt(&ns_grn, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_red, 1);
-    gpio_pin_set_dt(&ew_grn, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_red, 1);
+    // Stingem tot mai intai
+    gpio_pin_set_dt(&ns_grn, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_red, 0);
+    gpio_pin_set_dt(&ew_grn, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_red, 0);
+    
+    // Aprindem doar rosu
+    k_msleep(50); // Mic delay de siguranta
+    gpio_pin_set_dt(&ns_red, 1);
+    gpio_pin_set_dt(&ew_red, 1);
 }
 
 void force_cars_ns_green_ew_red(void) {
@@ -140,4 +148,18 @@ void force_cars_ew_green_ns_red(void) {
     /* Est-Vest are Verde, Nord-Sud are Rosu */
     gpio_pin_set_dt(&ew_red, 0); gpio_pin_set_dt(&ew_yel, 0); gpio_pin_set_dt(&ew_grn, 1);
     gpio_pin_set_dt(&ns_grn, 0); gpio_pin_set_dt(&ns_yel, 0); gpio_pin_set_dt(&ns_red, 1);
+}
+
+char get_auto_ns_color(void) {
+    if (gpio_pin_get_dt(&ns_grn) == 1) return 'G';
+    if (gpio_pin_get_dt(&ns_yel) == 1) return 'Y';
+    if (gpio_pin_get_dt(&ns_red) == 1) return 'R';
+    return 'O'; /* Niciun LED nu este aprins */
+}
+
+char get_auto_ew_color(void) {
+    if (gpio_pin_get_dt(&ew_grn) == 1) return 'G';
+    if (gpio_pin_get_dt(&ew_yel) == 1) return 'Y';
+    if (gpio_pin_get_dt(&ew_red) == 1) return 'R';
+    return 'O';
 }

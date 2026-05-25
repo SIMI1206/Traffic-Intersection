@@ -2,8 +2,13 @@
 #include <zephyr/net/socket.h>
 #include <zephyr/net/mqtt.h>
 #include <zephyr/logging/log.h>
+
 #include "mqtt_manager.h"
 #include "emergency.h"
+#include "telemetry.h"
+#include "hazard.h"
+
+bool is_mqtt_connected = false;
 
 LOG_MODULE_REGISTER(mqtt_manager, LOG_LEVEL_INF);
 
@@ -36,6 +41,7 @@ static void mqtt_evt_handler(struct mqtt_client *const client, const struct mqtt
         case MQTT_EVT_CONNACK:
             if (evt->result == 0) {
                 LOG_INF("Conectat la Broker!");
+                is_mqtt_connected = true;
                 /* 1. Abonare la comenzi */
                 struct mqtt_topic topic = { .topic.utf8 = (uint8_t *)TOPIC_COMMANDS, .topic.size = strlen(TOPIC_COMMANDS) };
                 struct mqtt_subscription_list sub_list = { .list = &topic, .list_count = 1, .message_id = 1 };
@@ -62,6 +68,25 @@ static void mqtt_evt_handler(struct mqtt_client *const client, const struct mqtt
                 else if (strncmp(payload, "URGENTA_EW", 10) == 0) {
                     LOG_INF(">>> ACTIVARE VERDE EST-VEST! <<<");
                     trigger_emergency(EMERG_EW);
+                }
+                if (strncmp(payload, "URGENTA_NS", 10) == 0) {
+                    LOG_INF(">>> ACTIVARE VERDE NORD-SUD! <<<");
+                    trigger_emergency(EMERG_NS);
+                } 
+                else if (strncmp(payload, "URGENTA_EW", 10) == 0) {
+                    LOG_INF(">>> ACTIVARE VERDE EST-VEST! <<<");
+                    trigger_emergency(EMERG_EW);
+                }
+                /* ADAUGA ACEST NOU BLOC PENTRU HAZARD: */
+                else if (strncmp(payload, "HAZARD", 6) == 0) {
+                    hazard_mode_active = !hazard_mode_active;
+                    LOG_INF("Mod Hazard: %s", hazard_mode_active ? "ACTIVAT" : "DEZACTIVAT");
+
+                    if (!hazard_mode_active) {
+                        /* Daca am dezactivat Hazard, forțăm resetarea traficului */
+                        force_auto_red(); // Punem pe rosu sa plece de la zero
+                        restart_car_traffic_thread(); // Restartam thread-ul sa reia ciclul
+                    }
                 }
             } else {
                 mqtt_read_publish_payload(client, payload, 0); 
@@ -140,4 +165,9 @@ void init_mqtt(void) {
                     K_THREAD_STACK_SIZEOF(mqtt_stack_area),
                     mqtt_thread_fn, NULL, NULL, NULL,
                     MQTT_PRIORITY, 0, K_NO_WAIT);
+}
+
+int mqtt_publish_to_topic(const char *topic, const char *payload) {
+    /* Apelam functia interna de publish folosind contextul global client_ctx */
+    return publish(&client_ctx, topic, payload);
 }

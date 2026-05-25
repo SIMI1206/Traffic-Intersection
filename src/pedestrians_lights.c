@@ -52,11 +52,13 @@ bool is_ew_cooldown_passed(void) {
 
 
 void init_traffic_pedestrians(void) {
-    gpio_pin_configure_dt(&ped_ns_red, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ped_ns_grn, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ped_ew_red, GPIO_OUTPUT_INACTIVE);
-    gpio_pin_configure_dt(&ped_ew_grn, GPIO_OUTPUT_INACTIVE);
+    /* Am adaugat | GPIO_INPUT la LED-uri ca sa le putem citi starea in telemetrie */
+    gpio_pin_configure_dt(&ped_ns_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ped_ns_grn, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ped_ew_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
+    gpio_pin_configure_dt(&ped_ew_grn, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
 
+    /* Setarile butoanelor raman la fel */
     gpio_pin_configure_dt(&btn_ns, GPIO_INPUT | GPIO_PULL_UP);
     gpio_pin_interrupt_configure_dt(&btn_ns, GPIO_INT_EDGE_TO_ACTIVE);
     gpio_init_callback(&btn_ns_cb_data, button_ns_pressed, BIT(btn_ns.pin));
@@ -106,4 +108,18 @@ void blink_ped_ew_green(void) {
         gpio_pin_set_dt(&ped_ew_grn, 1); k_msleep(250);
     }
     gpio_pin_set_dt(&ped_ew_grn, 0); gpio_pin_set_dt(&ped_ew_red, 1);
+}
+
+
+
+char get_ped_ns_color(void) {
+    if (gpio_pin_get_dt(&ped_ns_grn) == 1) return 'G'; 
+    if (gpio_pin_get_dt(&ped_ns_red) == 1) return 'R';
+    return 'O';
+}
+
+char get_ped_ew_color(void) {
+    if (gpio_pin_get_dt(&ped_ew_grn) == 1) return 'G';
+    if (gpio_pin_get_dt(&ped_ew_red) == 1) return 'R';
+    return 'O';
 }

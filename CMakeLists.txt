@@ -2,4 +2,4 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(intersectie_rtos)
 
-target_sources(app PRIVATE src/main.c src/cars_lights_control.c src/pedestrians_lights.c src/emergency.c src/hazard.c src/wifi_manager.c  src/mqtt_manager.c)
+target_sources(app PRIVATE src/main.c src/cars_lights_control.c src/pedestrians_lights.c src/emergency.c src/hazard.c src/wifi_manager.c  src/mqtt_manager.c src/telemetry.c)

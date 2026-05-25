@@ -11,4 +11,7 @@ void stop_car_traffic_thread(void); // thread stop
 void force_cars_ns_green_ew_red(void);
 void force_cars_ew_green_ns_red(void);
 
+char get_auto_ns_color(void);
+char get_auto_ew_color(void);
+
 #endif

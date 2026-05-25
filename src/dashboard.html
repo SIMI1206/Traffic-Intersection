@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispecerat Intersecție Inteligentă</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { background-color: #121212; color: #f0f0f0; font-family: 'Segoe UI', sans-serif; }
+        .dashboard-card { background-color: #1e1e24; border: 1px solid #333; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        
+        /* Design Semafor Auto (3 Culori) */
+        .pole-auto { background: #111; width: 60px; padding: 10px; border-radius: 12px; margin: 0 auto; border: 2px solid #333; box-shadow: inset 0 0 15px rgba(0,0,0,1); display: inline-block; margin: 0 10px; }
+        .light { width: 35px; height: 35px; border-radius: 50%; margin: 0 auto 8px auto; background: #222; opacity: 0.15; transition: 0.2s; border: 2px solid #000; box-shadow: inset 0 0 5px rgba(0,0,0,0.8); }
+        .light:last-child { margin-bottom: 0; }
+        
+        /* Design Semafor Pietoni (2 Culori, Patrat) */
+        .pole-ped { background: #111; width: 50px; padding: 8px; border-radius: 8px; margin: 0 auto; border: 2px solid #333; box-shadow: inset 0 0 15px rgba(0,0,0,1); display: inline-block; margin: 0 10px; }
+        .light-ped { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 6px auto; background: #222; opacity: 0.15; transition: 0.2s; border: 2px solid #000; }
+        .light-ped:last-child { margin-bottom: 0; }
+
+        /* Culori aprinse cu efect de LED REAL */
+        .light.red.active, .light-ped.red.active { background: #ff2a2a; opacity: 1; box-shadow: 0 0 25px #ff2a2a, inset 0 0 10px rgba(255,255,255,0.6); }
+        .light.yellow.active { background: #ffcc00; opacity: 1; box-shadow: 0 0 25px #ffcc00, inset 0 0 10px rgba(255,255,255,0.6); }
+        .light.green.active, .light-ped.green.active { background: #15ff15; opacity: 1; box-shadow: 0 0 25px #15ff15, inset 0 0 10px rgba(255,255,255,0.6); }
+
+        .console-box { background-color: #000; color: #00ff00; font-family: 'Courier New', monospace; height: 160px; overflow-y: auto; border-radius: 8px; padding: 10px; font-size: 0.85rem; border: 1px solid #333;}
+        .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; }
+        .section-title { border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px; color: #0dcaf0; }
+        .req-badge { font-size: 0.8rem; letter-spacing: 0.5px; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+        <div>
+            <h2 class="fw-bold text-white mb-1">Dispecerat Intersecție Inteligentă</h2>
+            <p class="text-secondary mb-0">Monitorizare & Control Trafic</p>
+        </div>
+        <div>
+            <span id="server-status" class="badge bg-secondary status-badge">Se conectează...</span>
+            <span id="pico-status" class="badge bg-danger status-badge ms-2">Placă Offline</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        
+        <div class="col-md-6">
+            <div class="card dashboard-card p-4 h-100 text-center">
+                <h5 class="section-title fw-bold">AXA NORD - SUD</h5>
+                
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <h6 class="text-muted mb-3"><i class="text-white">🚗 Trafic Auto</i></h6>
+                        <div class="pole-auto">
+                            <div class="light red auto-ns-R"></div>
+                            <div class="light yellow auto-ns-Y"></div>
+                            <div class="light green auto-ns-G"></div>
+                        </div>
+                        <div class="pole-auto">
+                            <div class="light red auto-ns-R"></div>
+                            <div class="light yellow auto-ns-Y"></div>
+                            <div class="light green auto-ns-G"></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted mb-2"><i class="text-white">🚶 Pietoni</i></h6>
+                        <div id="badge-req-ns" class="badge bg-dark text-secondary border border-secondary mb-3 req-badge w-100 py-2">Buton Inactiv</div>
+                        
+                        <div class="pole-ped">
+                            <div class="light-ped red ped-ns-R"></div>
+                            <div class="light-ped green ped-ns-G"></div>
+                        </div>
+                        <div class="pole-ped">
+                            <div class="light-ped red ped-ns-R"></div>
+                            <div class="light-ped green ped-ns-G"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card dashboard-card p-4 h-100 text-center">
+                <h5 class="section-title fw-bold">AXA EST - VEST</h5>
+                
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <h6 class="text-muted mb-3"><i class="text-white">🚗 Trafic Auto</i></h6>
+                        <div class="pole-auto">
+                            <div class="light red auto-ew-R"></div>
+                            <div class="light yellow auto-ew-Y"></div>
+                            <div class="light green auto-ew-G"></div>
+                        </div>
+                        <div class="pole-auto">
+                            <div class="light red auto-ew-R"></div>
+                            <div class="light yellow auto-ew-Y"></div>
+                            <div class="light green auto-ew-G"></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted mb-2"><i class="text-white">🚶 Pietoni</i></h6>
+                        <div id="badge-req-ew" class="badge bg-dark text-secondary border border-secondary mb-3 req-badge w-100 py-2">Buton Inactiv</div>
+                        
+                        <div class="pole-ped">
+                            <div class="light-ped red ped-ew-R"></div>
+                            <div class="light-ped green ped-ew-G"></div>
+                        </div>
+                        <div class="pole-ped">
+                            <div class="light-ped red ped-ew-R"></div>
+                            <div class="light-ped green ped-ew-G"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card p-4 h-100">
+                <h5 class="section-title fw-bold">🚑 Declanșare Ambulanță</h5>
+                <div class="d-grid gap-3 mt-2">
+                    <button onclick="trimiteComanda('URGENTA_NS')" class="btn btn-outline-info btn-lg fw-bold shadow-sm">
+                        🚨 FORȚEAZĂ VERDE: NORD-SUD
+                    </button>
+                    <button onclick="trimiteComanda('URGENTA_EW')" class="btn btn-outline-warning btn-lg fw-bold shadow-sm">
+                        🚨 FORȚEAZĂ VERDE: EST-VEST
+                    </button>
+                    <button onclick="trimiteComanda('HAZARD')" class="btn btn-outline-danger btn-lg fw-bold shadow-sm">
+                        ⚠️ HAZARD MODE 
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card dashboard-card p-4 h-100">
+                <h5 class="section-title fw-bold">📡 Jurnal Telemetrie</h5>
+                <div id="consola" class="console-box">
+                    [Sistem] Așteptare date în timp real...<br>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const consola = document.getElementById('consola');
+    const serverStatus = document.getElementById('server-status');
+    const picoStatus = document.getElementById('pico-status');
+    
+    let watchdogTimer = null; // Timer-ul care verifica daca placa e "vie"
+
+    function adaugaInConsola(mesaj) {
+        const timp = new Date().toLocaleTimeString();
+        consola.innerHTML += `[${timp}] ${mesaj}<br>`;
+        consola.scrollTop = consola.scrollHeight;
+    }
+
+    function schimbaCuloare(clasaGrup, culoareAlesa) {
+        document.querySelectorAll(`.${clasaGrup}-R`).forEach(el => el.classList.remove('active'));
+        document.querySelectorAll(`.${clasaGrup}-Y`).forEach(el => el.classList.remove('active'));
+        document.querySelectorAll(`.${clasaGrup}-G`).forEach(el => el.classList.remove('active'));
+        
+        // Daca culoarea e 'O' (Off), lasam totul stins
+        if(culoareAlesa !== 'O') {
+            document.querySelectorAll(`.${clasaGrup}-${culoareAlesa}`).forEach(el => el.classList.add('active'));
+        }
+    }
+
+    function schimbaCererePieton(axa, stare) {
+        const badge = document.getElementById(`badge-req-${axa}`);
+        if (stare === '1') {
+            badge.className = "badge bg-warning text-dark mb-3 req-badge w-100 py-2";
+            badge.innerHTML = "✋ Cerere Așteptare";
+        } else {
+            badge.className = "badge bg-dark text-secondary border border-secondary mb-3 req-badge w-100 py-2";
+            badge.innerHTML = "Buton Inactiv";
+        }
+    }
+
+    // Functia care se declanseaza la fiecare mesaj primit si reseteaza cronometrul mortii
+    function reseteazaWatchdog() {
+        // Daca exista un timer in desfasurare, il anulam
+        if (watchdogTimer) clearTimeout(watchdogTimer);
+        
+        // Mentinem badge-ul verde cat timp primim mesaje
+        picoStatus.className = "badge bg-success status-badge ms-2";
+        picoStatus.innerText = "Placă Intersecție Online 🟢";
+
+        // Setam un nou timer de 3 secunde (3000 ms)
+        watchdogTimer = setTimeout(() => {
+            // Daca au trecut 3 secunde FARA mesaje, consideram placa offline
+            picoStatus.className = "badge bg-danger status-badge ms-2";
+            picoStatus.innerText = "Placă Offline 🔴";
+            adaugaInConsola("⚠️ ALARMĂ: S-a pierdut conexiunea cu intersecția!");
+            
+            // Stingem toate semafoarele pe ecran (le facem 'O' de la Off)
+            schimbaCuloare('auto-ns', 'O');
+            schimbaCuloare('auto-ew', 'O');
+            schimbaCuloare('ped-ns', 'O');
+            schimbaCuloare('ped-ew', 'O');
+        }, 3000);
+    }
+
+    const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+    client.on('connect', () => {
+        serverStatus.className = "badge bg-success status-badge";
+        serverStatus.innerText = "Cloud Online 🟢";
+        client.subscribe('simi/intersectie/status');
+        client.subscribe('simi/intersectie/live'); 
+    });
+
+    client.on('message', (topic, message) => {
+        const text = message.toString();
+        
+        // Resetam timer-ul ori de cate ori primim un mesaj pe oricare topic
+        reseteazaWatchdog();
+        
+        if (topic === 'simi/intersectie/live') {
+            const comenzi = text.split(','); 
+            comenzi.forEach(comanda => {
+                const [target, data] = comanda.split(':');
+                
+                if(target === 'A_NS') schimbaCuloare('auto-ns', data);
+                if(target === 'A_EW') schimbaCuloare('auto-ew', data);
+                if(target === 'P_NS') schimbaCuloare('ped-ns', data);
+                if(target === 'P_EW') schimbaCuloare('ped-ew', data);
+                
+                if(target === 'REQ_NS') schimbaCererePieton('ns', data);
+                if(target === 'REQ_EW') schimbaCererePieton('ew', data);
+            });
+        }
+    });
+
+    function trimiteComanda(comanda) {
+        if (client.connected) {
+            client.publish('simi/intersectie/comenzi', comanda);
+            adaugaInConsola(`>> Comandă trimisă: ${comanda}`);
+        } else {
+            alert("Eroare: Dispeceratul nu este conectat la Cloud!");
+        }
+    }
+</script>
+
+</body>
+</html>
