@@ -4,7 +4,7 @@
 #include "cars_lights_control.h"
 #include "hazard.h"
 
-#define COOLDOWN_TIME 15000 // 15 sec cooldown between pedestrian crossings
+#define COOLDOWN_TIME 15000 
 
 K_SEM_DEFINE(ped_ns_sem, 0, 1);
 K_SEM_DEFINE(ped_ew_sem, 0, 1);
@@ -52,7 +52,6 @@ bool is_ew_cooldown_passed(void) {
 
 
 void init_traffic_pedestrians(void) {
-    /* Am adaugat | GPIO_INPUT la LED-uri ca sa le putem citi starea in telemetrie */
     gpio_pin_configure_dt(&ped_ns_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
     gpio_pin_configure_dt(&ped_ns_grn, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
     gpio_pin_configure_dt(&ped_ew_red, GPIO_OUTPUT_INACTIVE | GPIO_INPUT);
@@ -122,4 +121,11 @@ char get_ped_ew_color(void) {
     if (gpio_pin_get_dt(&ped_ew_grn) == 1) return 'G';
     if (gpio_pin_get_dt(&ped_ew_red) == 1) return 'R';
     return 'O';
+}
+
+void clear_pedestrian_requests(void) {
+
+    ns_ped_request = false;  
+    ew_ped_request = false;  
+    
 }

@@ -10,17 +10,15 @@
         body { background-color: #121212; color: #f0f0f0; font-family: 'Segoe UI', sans-serif; }
         .dashboard-card { background-color: #1e1e24; border: 1px solid #333; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
         
-        /* Design Semafor Auto (3 Culori) */
+
         .pole-auto { background: #111; width: 60px; padding: 10px; border-radius: 12px; margin: 0 auto; border: 2px solid #333; box-shadow: inset 0 0 15px rgba(0,0,0,1); display: inline-block; margin: 0 10px; }
         .light { width: 35px; height: 35px; border-radius: 50%; margin: 0 auto 8px auto; background: #222; opacity: 0.15; transition: 0.2s; border: 2px solid #000; box-shadow: inset 0 0 5px rgba(0,0,0,0.8); }
         .light:last-child { margin-bottom: 0; }
         
-        /* Design Semafor Pietoni (2 Culori, Patrat) */
         .pole-ped { background: #111; width: 50px; padding: 8px; border-radius: 8px; margin: 0 auto; border: 2px solid #333; box-shadow: inset 0 0 15px rgba(0,0,0,1); display: inline-block; margin: 0 10px; }
         .light-ped { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 6px auto; background: #222; opacity: 0.15; transition: 0.2s; border: 2px solid #000; }
         .light-ped:last-child { margin-bottom: 0; }
 
-        /* Culori aprinse cu efect de LED REAL */
         .light.red.active, .light-ped.red.active { background: #ff2a2a; opacity: 1; box-shadow: 0 0 25px #ff2a2a, inset 0 0 10px rgba(255,255,255,0.6); }
         .light.yellow.active { background: #ffcc00; opacity: 1; box-shadow: 0 0 25px #ffcc00, inset 0 0 10px rgba(255,255,255,0.6); }
         .light.green.active, .light-ped.green.active { background: #15ff15; opacity: 1; box-shadow: 0 0 25px #15ff15, inset 0 0 10px rgba(255,255,255,0.6); }
@@ -122,7 +120,7 @@
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card dashboard-card p-4 h-100">
-                <h5 class="section-title fw-bold">🚑 Declanșare Ambulanță</h5>
+                <h5 class="section-title fw-bold">🚑 Declanșare Urgență</h5>
                 <div class="d-grid gap-3 mt-2">
                     <button onclick="trimiteComanda('URGENTA_NS')" class="btn btn-outline-info btn-lg fw-bold shadow-sm">
                         🚨 FORȚEAZĂ VERDE: NORD-SUD
@@ -152,7 +150,7 @@
     const serverStatus = document.getElementById('server-status');
     const picoStatus = document.getElementById('pico-status');
     
-    let watchdogTimer = null; // Timer-ul care verifica daca placa e "vie"
+    let watchdogTimer = null; 
 
     function adaugaInConsola(mesaj) {
         const timp = new Date().toLocaleTimeString();
@@ -165,7 +163,6 @@
         document.querySelectorAll(`.${clasaGrup}-Y`).forEach(el => el.classList.remove('active'));
         document.querySelectorAll(`.${clasaGrup}-G`).forEach(el => el.classList.remove('active'));
         
-        // Daca culoarea e 'O' (Off), lasam totul stins
         if(culoareAlesa !== 'O') {
             document.querySelectorAll(`.${clasaGrup}-${culoareAlesa}`).forEach(el => el.classList.add('active'));
         }
@@ -182,23 +179,17 @@
         }
     }
 
-    // Functia care se declanseaza la fiecare mesaj primit si reseteaza cronometrul mortii
     function reseteazaWatchdog() {
-        // Daca exista un timer in desfasurare, il anulam
         if (watchdogTimer) clearTimeout(watchdogTimer);
         
-        // Mentinem badge-ul verde cat timp primim mesaje
         picoStatus.className = "badge bg-success status-badge ms-2";
         picoStatus.innerText = "Placă Intersecție Online 🟢";
 
-        // Setam un nou timer de 3 secunde (3000 ms)
         watchdogTimer = setTimeout(() => {
-            // Daca au trecut 3 secunde FARA mesaje, consideram placa offline
             picoStatus.className = "badge bg-danger status-badge ms-2";
             picoStatus.innerText = "Placă Offline 🔴";
             adaugaInConsola("⚠️ ALARMĂ: S-a pierdut conexiunea cu intersecția!");
             
-            // Stingem toate semafoarele pe ecran (le facem 'O' de la Off)
             schimbaCuloare('auto-ns', 'O');
             schimbaCuloare('auto-ew', 'O');
             schimbaCuloare('ped-ns', 'O');
@@ -218,7 +209,6 @@
     client.on('message', (topic, message) => {
         const text = message.toString();
         
-        // Resetam timer-ul ori de cate ori primim un mesaj pe oricare topic
         reseteazaWatchdog();
         
         if (topic === 'simi/intersectie/live') {

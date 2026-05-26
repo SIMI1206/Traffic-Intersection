@@ -33,4 +33,6 @@ void update_ew_cooldown(void);
 char get_ped_ns_color(void);
 char get_ped_ew_color(void);
 
+void clear_pedestrian_requests(void);
+
 #endif 

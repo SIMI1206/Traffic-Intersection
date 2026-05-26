@@ -10,12 +10,9 @@
 #include "mqtt_manager.h"
 
 int main(void) {
-    /* 1. Pornim cablul USB pentru Log-uri */
     usb_enable(NULL);
     
-    /* 2. Asteptam 3 secunde ca Windows-ul sa recunoasca portul (COM10) */
     k_msleep(3000); 
-
 
     init_wifi();
     init_traffic_auto();
