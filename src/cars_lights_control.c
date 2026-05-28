@@ -1,8 +1,11 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/logging/log.h>
 #include "cars_lights_control.h"
 #include "pedestrians_lights.h"
 #include "hazard.h"
+
+LOG_MODULE_REGISTER(cars_lights_control, LOG_LEVEL_INF);
 
 #define MIN_GREEN_TIME   5000 // cars minim green time
 #define MAX_GREEN_TIME   10000 // cars max green time
@@ -69,6 +72,13 @@ void car_traffic_thread_fn(void *arg1, void *arg2, void *arg3) {
         k_sem_take(&ped_ew_sem, K_MSEC(MAX_GREEN_TIME - MIN_GREEN_TIME));
 
         if (ns_crossed) {
+            extern uint32_t timp_apasare_buton;
+            uint32_t timp_procesare = k_cycle_get_32();
+            uint32_t latenta_cicluri = timp_procesare - timp_apasare_buton;
+            uint32_t latenta_us = k_cyc_to_us_ceil32(latenta_cicluri);
+            LOG_INF("Latență RTOS: %u microsecunde de la apăsare la procesare!", latenta_us);
+
+            blink_ped_ns_green();
             blink_ped_ns_green();
             clear_ns_ped_request();
             k_sem_reset(&ped_ns_sem); 

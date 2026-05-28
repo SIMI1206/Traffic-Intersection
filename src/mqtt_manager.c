@@ -116,18 +116,15 @@ static void mqtt_thread_fn(void *p1, void *p2, void *p3) {
     };
 
     while (1) {
-        /* Blocul de conectare/reconectare care se executa DOAR cand e nevoie */
         if (mqtt_needs_reconnect) {
             LOG_WRN("Se curata memoria si se pregateste o noua conexiune MQTT...");
-            mqtt_needs_reconnect = false; /* Oprim repetarea abuziva */
+            mqtt_needs_reconnect = false; 
             is_mqtt_connected = false;
 
-            /* 1. Distrugem vechiul socket si stergem toata structura din memorie */
             mqtt_abort(&client_ctx);
             k_msleep(500);
             memset(&client_ctx, 0, sizeof(client_ctx)); 
 
-            /* 2. Cautam IP-ul */
             rc = zsock_getaddrinfo(BROKER_ADDR, "1883", &hints, &res);
             if (rc != 0) {
                 LOG_ERR("Eroare DNS. Reincercam in 5 secunde...");
@@ -142,7 +139,6 @@ static void mqtt_thread_fn(void *p1, void *p2, void *p3) {
             broker.sin_addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
             zsock_freeaddrinfo(res);
 
-            /* 3. Re-initializam curat */
             mqtt_client_init(&client_ctx);
             client_ctx.broker = &broker;
             client_ctx.evt_cb = mqtt_evt_handler;
@@ -156,7 +152,6 @@ static void mqtt_thread_fn(void *p1, void *p2, void *p3) {
             client_ctx.tx_buf = tx_buffer;
             client_ctx.tx_buf_size = sizeof(tx_buffer);
 
-            /* 4. Lansam conectarea si o lasam in pace sa astepte CONNACK */
             rc = mqtt_connect(&client_ctx);
             if (rc != 0) {
                 LOG_ERR("mqtt_connect a esuat: %d. Reincercam in 5s...", rc);
@@ -167,13 +162,11 @@ static void mqtt_thread_fn(void *p1, void *p2, void *p3) {
             }
         }
 
-        /* Daca nu avem un socket valid inca, asteptam */
         if (client_ctx.transport.tcp.sock < 0) {
             k_msleep(100);
             continue;
         }
 
-        /* Gestionam comunicarea retelei pe socket-ul activ */
         fds[0].fd = client_ctx.transport.tcp.sock;
         fds[0].events = ZSOCK_POLLIN;
 
@@ -197,7 +190,6 @@ static void mqtt_thread_fn(void *p1, void *p2, void *p3) {
             continue;
         }
 
-        /* Daca suntem confirmati, tinem conexiunea treaza */
         if (is_mqtt_connected) {
             int live_rc = mqtt_live(&client_ctx);
             if (live_rc < 0 && live_rc != -EAGAIN) {

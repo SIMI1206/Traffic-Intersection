@@ -87,7 +87,7 @@ void init_wifi(void) {
 }
 
 void wifi_force_reconnect(void) {
-    LOG_WRN("Forțăm restartarea modulului Wi-Fi (Trezire din starea de zombi)...");
+    LOG_WRN("Forțăm restartarea modulului Wi-Fi...");
     struct net_if *iface = net_if_get_default();
     
     net_mgmt(NET_REQUEST_WIFI_DISCONNECT, iface, NULL, 0);
